@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HydroPulse • Personal Water Tracker</title>
+
+    <!-- Mobile & PWA meta tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Water Tracker">
+    <meta name="theme-color" content="#f0f7ff">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Refreshing Light Theme Color Palette */
+            --bg-gradient: linear-gradient(180deg, #f0f7ff 0%, #e2f1fe 40%, #ebf5fe 100%);
+            --surface-card: rgba(255, 255, 255, 0.9);
+            --surface-border: rgba(186, 230, 253, 0.75);
+            --surface-border-strong: rgba(125, 211, 252, 0.85);
+
+            --water-primary: #0284c7;
+            --water-vibrant: #0ea5e9;
+            --water-light: #38bdf8;
+            --water-foam: rgba(255, 255, 255, 0.85);
+
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-rose: #e11d48;
+            --accent-rose-bg: #fff1f2;
+
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --text-dim: #64748b;
+
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 22px;
+            --radius-full: 9999px;
+
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 8px 24px rgba(2, 132, 199, 0.09), 0 2px 6px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 16px 36px rgba(2, 132, 199, 0.12);
+
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #e2e8f0;
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Portrait Phone Container */
+        .phone-canvas {
+            width: 100vw;
+            max-width: 440px;
+            height: 100vh;
+            height: -webkit-fill-available;
+            max-height: 940px;
+            background: var(--bg-gradient);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(15, 23, 42, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        @media (min-width: 500px) {
+            .phone-canvas {
+                border-radius: 40px;
+                height: 93vh;
+                max-height: 890px;
+            }
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(186, 230, 253, 0.45) 0%, transparent 70%);
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(50px);
+        }
+
+        /* =========================================================
+       1. TOP: CALENDAR STRIP
+       ========================================================= */
+        .top-calendar-bar {
+            padding: calc(12px + var(--safe-top)) 16px 8px 16px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--surface-border);
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-title-group {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+        }
+
+        .calendar-icon-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            background: #e0f2fe;
+            color: var(--water-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bae6fd;
+        }
+
+        .calendar-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .calendar-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-open-full-cal {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            padding: 4px 11px;
+            border-radius: var(--radius-full);
+            background: #ffffff;
+            border: 1px solid var(--surface-border-strong);
+            color: var(--water-primary);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(2, 132, 199, 0.08);
+            transition: all 0.2s;
+        }
+
+        .btn-open-full-cal:active {
+            transform: scale(0.96);
+        }
+
+        .calendar-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px 2px 5px 2px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .calendar-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cal-day-card {
+            flex: 0 0 76px;
+            scroll-snap-align: start;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: var(--radius-md);
+            padding: 7px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+        }
+
+        .cal-day-card.active-day {
+            background: linear-gradient(145deg, #e0f2fe, #f0f9ff);
+            border-color: var(--water-light);
+            box-shadow: 0 3px 12px rgba(14, 165, 233, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .cal-day-label {
+            font-size: 0.64rem;
+            color: var(--text-dim);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .cal-day-date {
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 1px 0 2px 0;
+        }
+
+        .cal-day-intake {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--water-primary);
+            white-space: nowrap;
+        }
+
+        .cal-day-pct {
+            font-size: 0.64rem;
+            font-weight: 800;
+            color: var(--accent-green);
+            margin-top: 1px;
+        }
+
+        .cal-day-card.missed .cal-day-pct {
+            color: var(--text-dim);
+        }
+
+        .cal-day-goal {
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+
+        /* =========================================================
+       2. TOP ACTION ROW: TIMER & ACTIONS
+       ========================================================= */
+        .top-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px 6px 16px;
+            z-index: 10;
+        }
+
+        .last-glass-timer-card {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 7px 11px;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.25s ease;
+        }
+
+        .last-glass-timer-card.alarm-active {
+            background: var(--accent-rose-bg);
+            border-color: var(--accent-rose);
+            animation: pulseAlertLight 1.2s infinite ease-in-out;
+        }
+
+        @keyframes pulseAlertLight {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(225, 29, 72, 0.2);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 18px rgba(225, 29, 72, 0.35);
+            }
+        }
+
+        .timer-label {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 700;
+        }
+
+        .timer-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--water-primary);
+        }
+
+        .alarm-active .timer-indicator {
+            background: var(--accent-rose);
+            animation: blinkIndicator 0.8s infinite;
+        }
+
+        @keyframes blinkIndicator {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .timer-digits {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .alarm-active .timer-digits {
+            color: var(--accent-rose);
+        }
+
+        .action-buttons-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 9px 12px;
+            border-radius: var(--radius-md);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-action:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .btn-finish {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #ffffff;
+            border-color: rgba(125, 211, 252, 0.5);
+        }
+
+        .btn-finish:hover:not(:disabled) {
+            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+        }
+
+        .btn-finish:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            border-color: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-refill {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            border-color: rgba(110, 231, 183, 0.5);
+        }
+
+        .btn-refill:hover:not(:disabled) {
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-refill:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            border-color: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-undo {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: #ffffff;
+            border: 1px solid var(--surface-border-strong);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .btn-undo:hover:not(:disabled) {
+            color: var(--water-primary);
+            border-color: var(--water-primary);
+        }
+
+        .btn-undo:active:not(:disabled) {
+            transform: scale(0.93);
+        }
+
+        .btn-undo:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* =========================================================
+       ALARM BANNER (CRITICAL FIX: POINTER-EVENTS NONE WHEN INACTIVE)
+       ========================================================= */
+        .alarm-banner {
+            position: absolute;
+            top: calc(88px + var(--safe-top));
+            left: 14px;
+            right: 14px;
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            border: 1px solid rgba(254, 205, 211, 0.8);
+            border-radius: var(--radius-lg);
+            padding: 12px 15px;
+            box-shadow: 0 12px 30px rgba(225, 29, 72, 0.35);
+            z-index: 45;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transform: translateY(-160%);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.34, 1.3, 0.64, 1);
+        }
+
+        .alarm-banner.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .alarm-text-title {
+            font-weight: 800;
+            font-size: 0.92rem;
+            color: #ffffff;
+        }
+
+        .alarm-text-sub {
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 1px;
+        }
+
+        .btn-alarm-dismiss {
+            padding: 7px 12px;
+            background: #ffffff;
+            color: #be123c;
+            font-weight: 800;
+            font-size: 0.76rem;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* =========================================================
+       3. MIDDLE: THE GLASS & PROGRESS SECTION
+       ========================================================= */
+        .middle-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 4px 18px 8px 18px;
+            z-index: 5;
+        }
+
+        .glass-display-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            margin-bottom: 22px;
+        }
+
+        .glass-outer-shell {
+            position: relative;
+            width: 154px;
+            height: 232px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .glass-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            filter: drop-shadow(0 14px 24px rgba(2, 132, 199, 0.16));
+        }
+
+        .liquid-clip-path {
+            transition: transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.4s ease;
+        }
+
+        .wave-surface {
+            animation: waveSlosh 3.6s infinite ease-in-out;
+            transform-origin: center;
+        }
+
+        @keyframes waveSlosh {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-2px) rotate(1.4deg);
+            }
+        }
+
+        .empty-glass-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #94a3b8;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .empty-glass-overlay.visible {
+            opacity: 1;
+        }
+
+        .empty-glass-overlay span {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+        }
+
+        .glass-meta-badge {
+            position: absolute;
+            right: 0px;
+            max-width: 138px;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border-strong);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            animation: floatBadge 4.5s infinite ease-in-out;
+        }
+
+        @keyframes floatBadge {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        .glass-tag-pill {
+            font-size: 0.62rem;
+            font-weight: 800;
+            color: var(--water-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 2px;
+        }
+
+        .glass-meta-name {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .glass-meta-capacity {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--water-primary);
+        }
+
+        .glass-meta-count {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .progress-section {
+            width: 100%;
+            max-width: 370px;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            padding: 13px 16px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .progress-stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 7px;
+        }
+
+        .progress-stat-left {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .progress-intake-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .progress-goal-val {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            font-weight: 700;
+        }
+
+        .progress-percentage {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--accent-green);
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(203, 213, 225, 0.6);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%);
+            border-radius: var(--radius-full);
+            transition: width 0.65s cubic-bezier(0.34, 1.25, 0.64, 1);
+            position: relative;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.45);
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+            animation: shimmerBar 2.2s infinite;
+        }
+
+        @keyframes shimmerBar {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .progress-sub-caption {
+            margin-top: 7px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .reset-clock-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-dim);
+        }
+
+        /* =========================================================
+       4. BOTTOM BAR: DATE/TIME & GLASS CABINET
+       ========================================================= */
+        .bottom-bar {
+            padding: 11px 16px calc(13px + var(--safe-bottom)) 16px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-top: 1px solid var(--surface-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .date-clock-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .live-date-text {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .live-time-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .bottom-controls-group {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .btn-cabinet {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 13px;
+            background: #ffffff;
+            border: 1px solid var(--surface-border-strong);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-cabinet:hover:not(:disabled) {
+            border-color: var(--water-primary);
+            background: #f0f9ff;
+        }
+
+        .btn-cabinet:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .btn-cabinet:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+        .btn-cabinet .lock-icon {
+            font-size: 0.72rem;
+            color: var(--accent-amber);
+        }
+
+        .btn-icon-round {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            background: #ffffff;
+            border: 1px solid var(--surface-border-strong);
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .btn-icon-round:hover {
+            color: var(--water-primary);
+            border-color: var(--water-primary);
+        }
+
+        /* =========================================================
+       5. MODALS & FULL CALENDAR (Light Theme)
+       ========================================================= */
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.38);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 60;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-sheet {
+            background: #ffffff;
+            border-top: 1px solid var(--surface-border);
+            border-radius: 28px 28px 0 0;
+            padding: 16px 20px calc(22px + var(--safe-bottom)) 20px;
+            max-height: 88%;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+            box-shadow: 0 -16px 45px rgba(15, 23, 42, 0.16);
+        }
+
+        .modal-backdrop.open .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .sheet-handle {
+            width: 42px;
+            height: 4px;
+            border-radius: 2px;
+            background: #cbd5e1;
+            margin: 0 auto 14px auto;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .sheet-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sheet-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* FULL CALENDAR VIEW */
+        .cal-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 6px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+        }
+
+        .cal-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .cal-month-title {
+            font-weight: 800;
+            font-size: 0.98rem;
+            color: var(--text-main);
+        }
+
+        .cal-grid-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .cal-month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+
+        .cal-cell {
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s;
+        }
+
+        .cal-cell:hover {
+            border-color: var(--water-light);
+        }
+
+        .cal-cell.empty {
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+        }
+
+        .cal-cell.today-cell {
+            border-color: var(--water-primary);
+            box-shadow: 0 0 0 1.5px var(--water-primary);
+        }
+
+        .cal-cell-day {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .cal-cell-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.58rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .cal-cell-pct.zero {
+            color: #94a3b8;
+        }
+
+        .cal-cell.achieved {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .cal-detail-card {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Cabinet Glass List */
+        .glasses-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            margin-bottom: 16px;
+        }
+
+        .glass-card-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 13px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+        }
+
+        .glass-card-item.selected {
+            border-color: var(--water-light);
+            background: #f0f9ff;
+            box-shadow: 0 3px 12px rgba(14, 165, 233, 0.12);
+        }
+
+        .glass-card-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .glass-icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--water-primary);
+        }
+
+        .glass-name-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .glass-cap-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--water-primary);
+            font-weight: 700;
+        }
+
+        .glass-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pill-small {
+            padding: 5px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: var(--radius-full);
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .btn-pill-small.active {
+            background: var(--water-primary);
+            color: #ffffff;
+            border-color: var(--water-primary);
+        }
+
+        .btn-del-glass-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid #fecdd3;
+            background: #fff1f2;
+            color: var(--accent-rose);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-del-glass-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 13px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--water-primary);
+            background: #ffffff;
+        }
+
+        .btn-primary-block {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            border: none;
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+            transition: transform 0.15s;
+        }
+
+        .btn-primary-block:active {
+            transform: scale(0.98);
+        }
+
+        /* Toast */
+        .toast-pill {
+            position: absolute;
+            bottom: calc(75px + var(--safe-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #ffffff;
+            padding: 9px 18px;
+            border-radius: var(--radius-full);
+            font-size: 0.78rem;
+            font-weight: 700;
+            z-index: 70;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+        }
+
+        .toast-pill.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Confetti */
+        #confettiCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone-canvas" id="appRoot">
+        <div class="ambient-glow"></div>
+        <canvas id="confettiCanvas"></canvas>
+
+        <!-- ==========================================
+         TOP: CALENDAR ARCHIVE STRIP
+         ========================================== -->
+        <header class="top-calendar-bar">
+            <div class="calendar-header">
+                <div class="calendar-title-group" id="btnHeaderCalendarTitle" title="Click to view full calendar">
+                    <div class="calendar-icon-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <span class="calendar-title">Hydration Calendar</span>
+                </div>
+                <div class="calendar-actions-right">
+                    <button class="btn-open-full-cal" id="btnOpenFullCal" title="Open Full Monthly Calendar">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                        <span>Full View</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Slideable / Scrollable Calendar Cards -->
+            <div class="calendar-scroll" id="calendarScroll">
+                <!-- Rendered by JS -->
+            </div>
+        </header>
+
+        <!-- ==========================================
+         TOP ACTION BAR: TIMER & ACTIONS
+         ========================================== -->
+        <section class="top-action-bar">
+            <!-- Top Left: Time since last glass -->
+            <div class="last-glass-timer-card" id="timerCard" title="Time elapsed since your last finished glass">
+                <div class="timer-label">
+                    <span class="timer-indicator"></span>
+                    <span>Last Glass</span>
+                </div>
+                <div class="timer-digits" id="timerDisplay">--:--</div>
+            </div>
+
+            <!-- Top Right: Undo, Finish & Refill -->
+            <div class="action-buttons-group">
+                <button class="btn-undo" id="btnUndoGlass" title="Undo last glass drank (if misclicked)" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.4">
+                        <path d="M3 7v6h6"></path>
+                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                    </svg>
+                </button>
+
+                <button class="btn-action btn-finish" id="btnFinishGlass">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.6">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Finish Glass</span>
+                </button>
+
+                <button class="btn-action btn-refill" id="btnRefillGlass">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M12 2v6m0 0l3-3m-3 3L9 5"></path>
+                        <path d="M20 12a8 8 0 1 1-16 0"></path>
+                    </svg>
+                    <span>Refill</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2-HOUR REMINDER ALARM BANNER (pointer-events managed safely) -->
+        <div class="alarm-banner" id="alarmBanner">
+            <div>
+                <div class="alarm-text-title">2 Hours Reached!</div>
+                <div class="alarm-text-sub">Time to hydrate and drink your next glass!</div>
+            </div>
+            <button class="btn-alarm-dismiss" id="btnDismissAlarm">I'm on it</button>
+        </div>
+
+        <!-- ==========================================
+         MIDDLE: THE GLASS & PROGRESS
+         ========================================== -->
+        <main class="middle-stage">
+
+            <div class="glass-display-row">
+                <!-- Center Glass SVG Graphic -->
+                <div class="glass-outer-shell">
+                    <svg class="glass-svg" viewBox="0 0 150 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="glassWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+                                <stop offset="15%" stop-color="rgba(186, 230, 253, 0.4)" />
+                                <stop offset="85%" stop-color="rgba(186, 230, 253, 0.25)" />
+                                <stop offset="100%" stop-color="rgba(255, 255, 255, 0.9)" />
+                            </linearGradient>
+
+                            <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#38bdf8" />
+                                <stop offset="50%" stop-color="#0ea5e9" />
+                                <stop offset="100%" stop-color="#0284c7" />
+                            </linearGradient>
+
+                            <clipPath id="glassInteriorClip">
+                                <path d="M 22 25 L 34 200 C 34 206 116 206 116 200 L 128 25 Z" />
+                            </clipPath>
+                        </defs>
+
+                        <!-- Soft background shadow inside glass -->
+                        <path d="M 20 20 L 32 202 C 32 210 118 210 118 202 L 130 20 Z"
+                            fill="rgba(14, 165, 233, 0.04)" />
+
+                        <!-- The Water Group clipped by glass -->
+                        <g clip-path="url(#glassInteriorClip)">
+                            <g id="waterLiquidGroup" class="liquid-clip-path" transform="translate(0, 0)">
+                                <rect id="waterRect" x="15" y="40" width="120" height="175" fill="url(#waterGrad)" />
+                                <ellipse id="waterSurface" class="wave-surface" cx="75" cy="40" rx="46" ry="6.5"
+                                    fill="var(--water-foam)" opacity="0.9" />
+                                <path d="M 38 45 L 44 190" stroke="rgba(255, 255, 255, 0.6)" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </g>
+                        </g>
+
+                        <!-- Glass Outer Border & Reflections -->
+                        <path d="M 20 20 L 32 202 C 32 210 118 210 118 202 L 130 20" stroke="url(#glassWallGrad)"
+                            stroke-width="5" stroke-linecap="round" />
+                        <ellipse cx="75" cy="20" rx="55" ry="7" stroke="rgba(255, 255, 255, 0.95)" stroke-width="3.5"
+                            fill="none" />
+                        <ellipse cx="75" cy="20" rx="52" ry="5.5" stroke="rgba(14, 165, 233, 0.45)" stroke-width="1.5"
+                            fill="none" />
+                        <ellipse cx="75" cy="204" rx="43" ry="6" fill="rgba(255, 255, 255, 0.6)"
+                            stroke="rgba(186, 230, 253, 0.8)" stroke-width="2" />
+                        <path d="M 124 35 L 114 185" stroke="rgba(255, 255, 255, 0.7)" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+
+                    <!-- Empty state overlay inside glass -->
+                    <div class="empty-glass-overlay visible" id="emptyOverlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <span>Empty</span>
+                    </div>
+                </div>
+
+                <!-- Beside glass: metadata badge -->
+                <div class="glass-meta-badge" id="glassMetaBadge">
+                    <span class="glass-tag-pill">Current Vessel</span>
+                    <div class="glass-meta-name" id="badgeGlassName">Standard Glass</div>
+                    <div class="glass-meta-capacity" id="badgeGlassCap">250 mL</div>
+                    <div class="glass-meta-count" id="badgeGlassCount">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span id="badgeCountText">1st glass</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-section">
+                <div class="progress-stats-row">
+                    <div class="progress-stat-left">
+                        <span class="progress-intake-val" id="progressIntakeVal">0</span>
+                        <span class="progress-goal-val">/ <span id="progressGoalVal">2,000</span> mL</span>
+                    </div>
+                    <div class="progress-percentage" id="progressPctVal">0.0%</div>
+                </div>
+
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+
+                <div class="progress-sub-caption">
+                    <span id="progressLeftText">2,000 mL remaining</span>
+                    <span class="reset-clock-pill">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Resets at 4:00 AM
+                    </span>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ==========================================
+         BOTTOM BAR: DATE/TIME & GLASS CABINET
+         ========================================== -->
+        <footer class="bottom-bar">
+            <!-- Live date and time -->
+            <div class="date-clock-group">
+                <div class="live-date-text" id="liveDateText">Tue, Oct 13</div>
+                <div class="live-time-text" id="liveTimeText">04:30 PM</div>
+            </div>
+
+            <!-- Controls: Cabinet & Settings -->
+            <div class="bottom-controls-group">
+                <button class="btn-cabinet" id="btnOpenCabinet" title="Open Glass Cabinet">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <path d="M4 4h16v16H4z"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M12 4v16"></path>
+                    </svg>
+                    <span>Cabinet</span>
+                    <span class="lock-icon" id="cabinetLockIcon" style="display:none">🔒</span>
+                </button>
+
+                <button class="btn-icon-round" id="btnOpenSettings" title="Adjust Daily Goal & Preferences">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </footer>
+
+        <!-- ==========================================
+         FULL CALENDAR MODAL (MONTH & HISTORY)
+         ========================================== -->
+        <div class="modal-backdrop" id="fullCalModal">
+            <div class="modal-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-header">
+                    <div class="sheet-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.3">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>Hydration History</span>
+                    </div>
+                    <button class="sheet-close-btn" id="btnCloseFullCal">✕</button>
+                </div>
+
+                <div class="cal-nav-bar">
+                    <button class="cal-nav-btn" id="btnPrevMonth">‹</button>
+                    <div class="cal-month-title" id="calMonthTitle">October 2026</div>
+                    <button class="cal-nav-btn" id="btnNextMonth">›</button>
+                </div>
+
+                <div class="cal-grid-weekdays">
+                    <div>Su</div>
+                    <div>Mo</div>
+                    <div>Tu</div>
+                    <div>We</div>
+                    <div>Th</div>
+                    <div>Fr</div>
+                    <div>Sa</div>
+                </div>
+
+                <div class="cal-month-grid" id="calMonthGrid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="cal-detail-card" id="calDetailCard">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong id="detailDateTitle" style="color:var(--text-main); font-size:0.9rem;">Today</strong>
+                        <span id="detailBadgePct"
+                            style="font-size:0.75rem; font-weight:800; color:var(--accent-green); background:#ecfdf5; padding:2px 8px; border-radius:99px;">0%</span>
+                    </div>
+                    <div
+                        style="font-size:0.8rem; color:var(--text-muted); display:flex; justify-content:space-between; margin-top:4px;">
+                        <span>Intake: <strong id="detailIntake" style="color:var(--water-primary)">0 mL</strong></span>
+                        <span>Goal: <strong id="detailGoal">2,000 mL</strong></span>
+                        <span>Glasses: <strong id="detailGlassesCount">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+         GLASS CABINET MODAL
+         ========================================== -->
+        <div class="modal-backdrop" id="cabinetModal">
+            <div class="modal-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-header">
+                    <div class="sheet-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.3">
+                            <path d="M4 4h16v16H4z"></path>
+                            <path d="M4 12h16"></path>
+                            <path d="M12 4v16"></path>
+                        </svg>
+                        <span>Glasses Cabinet</span>
+                    </div>
+                    <button class="sheet-close-btn" id="btnCloseCabinet">✕</button>
+                </div>
+
+                <p style="font-size:0.78rem; color:var(--text-dim); margin-bottom:14px;">
+                    Choose a glass for your next drink or manage your collection. You can change your glass whenever
+                    your current glass is empty!
+                </p>
+
+                <div class="glasses-grid" id="cabinetGlassesList">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="border-top:1px solid #e2e8f0; padding-top:14px; margin-top:8px;">
+                    <div class="sheet-title" style="font-size:0.95rem; margin-bottom:12px;" id="cabinetFormTitle">
+                        Add New Glass
+                    </div>
+                    <input type="hidden" id="editGlassId" value="">
+                    <div class="form-group">
+                        <label class="form-label">Glass / Vessel Name</label>
+                        <input type="text" class="form-input" id="inputGlassName"
+                            placeholder="e.g., Office Tumbler, Big Bottle">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capacity (mL)</label>
+                        <input type="number" class="form-input" id="inputGlassCap" placeholder="e.g., 350" min="50"
+                            max="3000">
+                    </div>
+                    <button class="btn-primary-block" id="btnSaveGlass">Save to Cabinet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+         SETTINGS MODAL (Daily Goal & Reset)
+         ========================================== -->
+        <div class="modal-backdrop" id="settingsModal">
+            <div class="modal-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-header">
+                    <div class="sheet-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.3">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                        <span>Goal & Preferences</span>
+                    </div>
+                    <button class="sheet-close-btn" id="btnCloseSettings">✕</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Daily Goal Target (mL)</label>
+                    <input type="number" class="form-input" id="inputDailyGoal" value="2000" min="500" step="50">
+                </div>
+
+                <div class="form-group" style="margin-top:14px;">
+                    <label class="form-label">Reminder Alarm Sound</label>
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 14px; border-radius:var(--radius-md); border:1px solid #cbd5e1;">
+                        <span style="font-size:0.86rem; color:var(--text-main); font-weight:600;">Play Sound at 2
+                            Hours</span>
+                        <input type="checkbox" id="chkAudioAlarm" checked
+                            style="width:18px; height:18px; accent-color:var(--water-primary); cursor:pointer;">
+                    </div>
+                </div>
+
+                <button class="btn-primary-block" id="btnSaveSettings" style="margin-top:14px;">Save Changes</button>
+
+                <!-- Bulletproof 2-tap Reset Today -->
+                <div
+                    style="margin-top:20px; padding-top:14px; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:0.8rem; font-weight:700; color:var(--text-main);">Reset Today's Progress
+                        </div>
+                        <div style="font-size:0.72rem; color:var(--text-dim);" id="resetSubtext">Clears today's intake
+                            back to 0 mL</div>
+                    </div>
+                    <button class="btn-pill-small" id="btnResetToday"
+                        style="color:var(--accent-rose); border-color:#fecdd3; background:#fff1f2; font-weight:800; padding:7px 12px;">Reset
+                        Today</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST POPUP -->
+        <div class="toast-pill" id="toastPill">
+            <span id="toastIcon">💧</span>
+            <span id="toastMsg">Glass Finished!</span>
+        </div>
+
+    </div>
+
+    <script>
+        /* =========================================================
+           STATE MANAGEMENT & CONFIGURATION
+           Requirement: Glass starts empty initially (isFilled: false),
+           so user can select glass in cabinet and refill to start!
+           ========================================================= */
+        const STORAGE_KEY = 'hydropulse_tracker_v2';
+
+        const DEFAULT_DATA = {
+            dailyGoal: 2000,
+            soundEnabled: true,
+            currentGlassId: 'g_default',
+            // Start empty on initial launch so user can choose vessel!
+            isFilled: false,
+            lastFinishedTimestamp: null,
+            alarmDismissedForCurrentCycle: false,
+            glasses: [
+                { id: 'g_default', name: 'Standard Glass', capacity: 250 },
+                { id: 'g_mug', name: 'Coffee Mug', capacity: 330 },
+                { id: 'g_bottle', name: 'Hydro Flask', capacity: 500 }
+            ],
+            history: {}
+        };
+
+        let state = loadState();
+        let calViewDate = new Date();
+
+        /* =========================================================
+           AUDIO SYNTHESIZER
+           ========================================================= */
+        let audioCtx = null;
+        let alarmInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playChime(freq = 587.33, duration = 0.4, type = 'sine') {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.28, audioCtx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn('Audio play error:', e);
+            }
+        }
+
+        function playCelebrationSound() {
+            if (!state.soundEnabled) return;
+            const notes = [440, 554.37, 659.25, 880];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playChime(freq, 0.45, 'triangle'), idx * 110);
+            });
+        }
+
+        function playWaterSound() {
+            if (!state.soundEnabled) return;
+            playChime(523.25, 0.25, 'sine');
+            setTimeout(() => playChime(659.25, 0.35, 'sine'), 120);
+        }
+
+        function startAlarmLoop() {
+            if (alarmInterval) return;
+            if (!state.soundEnabled) return;
+
+            const playAlertBeep = () => {
+                playChime(784, 0.18, 'triangle');
+                setTimeout(() => playChime(987.77, 0.25, 'sine'), 160);
+            };
+
+            playAlertBeep();
+            alarmInterval = setInterval(playAlertBeep, 4000);
+
+            if ('vibrate' in navigator) {
+                navigator.vibrate([250, 150, 250, 150, 400]);
+            }
+        }
+
+        function stopAlarmLoop() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+        }
+
+        /* =========================================================
+           4:00 AM DAY CALCULATION
+           ========================================================= */
+        function getHydrationDayKey(dateObj = new Date()) {
+            const d = new Date(dateObj);
+            if (d.getHours() < 4) {
+                d.setDate(d.getDate() - 1);
+            }
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function getFormattedDayTitle(dayKey) {
+            const parts = dayKey.split('-');
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            return {
+                weekday: d.toLocaleDateString(undefined, { weekday: 'short' }),
+                dateNum: d.getDate(),
+                month: d.toLocaleDateString(undefined, { month: 'short' })
+            };
+        }
+
+        function getTodayEntry() {
+            const dayKey = getHydrationDayKey();
+            if (!state.history[dayKey]) {
+                state.history[dayKey] = {
+                    totalMl: 0,
+                    goalMl: state.dailyGoal,
+                    glassesDrankCount: 0,
+                    logs: []
+                };
+            }
+            return state.history[dayKey];
+        }
+
+        /* =========================================================
+           PERSISTENCE
+           ========================================================= */
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    return { ...DEFAULT_DATA, ...parsed };
+                }
+            } catch (e) {
+                console.error('Failed to load storage:', e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error('Failed to save state:', e);
+            }
+        }
+
+        function getCurrentGlass() {
+            return state.glasses.find(g => g.id === state.currentGlassId) || state.glasses[0];
+        }
+
+        /* =========================================================
+           DOM ELEMENTS
+           ========================================================= */
+        const timerCard = document.getElementById('timerCard');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const btnFinishGlass = document.getElementById('btnFinishGlass');
+        const btnRefillGlass = document.getElementById('btnRefillGlass');
+        const btnUndoGlass = document.getElementById('btnUndoGlass');
+        const alarmBanner = document.getElementById('alarmBanner');
+        const btnDismissAlarm = document.getElementById('btnDismissAlarm');
+
+        const waterLiquidGroup = document.getElementById('waterLiquidGroup');
+        const emptyOverlay = document.getElementById('emptyOverlay');
+        const badgeGlassName = document.getElementById('badgeGlassName');
+        const badgeGlassCap = document.getElementById('badgeGlassCap');
+        const badgeCountText = document.getElementById('badgeCountText');
+
+        const progressIntakeVal = document.getElementById('progressIntakeVal');
+        const progressGoalVal = document.getElementById('progressGoalVal');
+        const progressPctVal = document.getElementById('progressPctVal');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressLeftText = document.getElementById('progressLeftText');
+
+        const liveDateText = document.getElementById('liveDateText');
+        const liveTimeText = document.getElementById('liveTimeText');
+
+        const btnOpenCabinet = document.getElementById('btnOpenCabinet');
+        const cabinetLockIcon = document.getElementById('cabinetLockIcon');
+        const cabinetModal = document.getElementById('cabinetModal');
+        const btnCloseCabinet = document.getElementById('btnCloseCabinet');
+        const cabinetGlassesList = document.getElementById('cabinetGlassesList');
+        const inputGlassName = document.getElementById('inputGlassName');
+        const inputGlassCap = document.getElementById('inputGlassCap');
+        const btnSaveGlass = document.getElementById('btnSaveGlass');
+        const editGlassId = document.getElementById('editGlassId');
+        const cabinetFormTitle = document.getElementById('cabinetFormTitle');
+
+        const btnOpenSettings = document.getElementById('btnOpenSettings');
+        const settingsModal = document.getElementById('settingsModal');
+        const btnCloseSettings = document.getElementById('btnCloseSettings');
+        const inputDailyGoal = document.getElementById('inputDailyGoal');
+        const chkAudioAlarm = document.getElementById('chkAudioAlarm');
+        const btnSaveSettings = document.getElementById('btnSaveSettings');
+        const btnResetToday = document.getElementById('btnResetToday');
+        const resetSubtext = document.getElementById('resetSubtext');
+
+        const calendarScroll = document.getElementById('calendarScroll');
+        const btnOpenFullCal = document.getElementById('btnOpenFullCal');
+        const btnHeaderCalendarTitle = document.getElementById('btnHeaderCalendarTitle');
+        const fullCalModal = document.getElementById('fullCalModal');
+        const btnCloseFullCal = document.getElementById('btnCloseFullCal');
+        const calMonthTitle = document.getElementById('calMonthTitle');
+        const btnPrevMonth = document.getElementById('btnPrevMonth');
+        const btnNextMonth = document.getElementById('btnNextMonth');
+        const calMonthGrid = document.getElementById('calMonthGrid');
+        const detailDateTitle = document.getElementById('detailDateTitle');
+        const detailBadgePct = document.getElementById('detailBadgePct');
+        const detailIntake = document.getElementById('detailIntake');
+        const detailGoal = document.getElementById('detailGoal');
+        const detailGlassesCount = document.getElementById('detailGlassesCount');
+
+        const toastPill = document.getElementById('toastPill');
+        const toastMsg = document.getElementById('toastMsg');
+
+        /* =========================================================
+           UPDATE UI & WATER GRAPHICS
+           ========================================================= */
+        function updateUI() {
+            const today = getTodayEntry();
+            const currentGlass = getCurrentGlass();
+
+            badgeGlassName.textContent = currentGlass.name;
+            badgeGlassCap.textContent = `${currentGlass.capacity} mL`;
+
+            const nth = today.glassesDrankCount + 1;
+            const nthSuffix = getNthSuffix(nth);
+            badgeCountText.textContent = `${nth}${nthSuffix} glass`;
+
+            if (state.isFilled) {
+                // Glass has water: Can finish it, refill disabled, cabinet locked
+                btnFinishGlass.disabled = false;
+                btnRefillGlass.disabled = true;
+
+                waterLiquidGroup.style.transform = 'translateY(0px)';
+                waterLiquidGroup.style.opacity = '1';
+                emptyOverlay.classList.remove('visible');
+
+                btnOpenCabinet.disabled = true;
+                btnOpenCabinet.title = "Finish current glass first to open cabinet";
+                cabinetLockIcon.style.display = 'inline';
+            } else {
+                // Glass is empty: Finish disabled, refill enabled, cabinet UNLOCKED
+                btnFinishGlass.disabled = true;
+                btnRefillGlass.disabled = false;
+
+                waterLiquidGroup.style.transform = 'translateY(160px)';
+                waterLiquidGroup.style.opacity = '0.15';
+                emptyOverlay.classList.add('visible');
+
+                btnOpenCabinet.disabled = false;
+                btnOpenCabinet.title = "Open Glass Cabinet";
+                cabinetLockIcon.style.display = 'none';
+            }
+
+            btnUndoGlass.disabled = !(today.logs && today.logs.length > 0);
+
+            const totalMl = today.totalMl;
+            const goalMl = today.goalMl || state.dailyGoal;
+            const pct = goalMl > 0 ? ((totalMl / goalMl) * 100) : 0;
+
+            progressIntakeVal.textContent = totalMl.toLocaleString();
+            progressGoalVal.textContent = goalMl.toLocaleString();
+            progressPctVal.textContent = `${pct.toFixed(1)}%`;
+            progressBarFill.style.width = `${Math.min(100, pct)}%`;
+
+            const remaining = Math.max(0, goalMl - totalMl);
+            if (remaining === 0) {
+                progressLeftText.textContent = "🎉 Daily Goal Achieved!";
+                progressLeftText.style.color = "var(--accent-green)";
+            } else {
+                progressLeftText.textContent = `${remaining.toLocaleString()} mL remaining`;
+                progressLeftText.style.color = "var(--text-dim)";
+            }
+
+            renderCalendar();
+            if (fullCalModal.classList.contains('open')) {
+                renderFullMonthCalendar();
+            }
+        }
+
+        function getNthSuffix(n) {
+            if (n % 100 >= 11 && n % 100 <= 13) return 'th';
+            switch (n % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        }
+
+        /* =========================================================
+           CALENDAR STRIP RENDERER
+           ========================================================= */
+        function renderCalendar() {
+            calendarScroll.innerHTML = '';
+            const todayKey = getHydrationDayKey();
+
+            const daysToShow = [];
+            const now = new Date();
+            if (now.getHours() < 4) {
+                now.setDate(now.getDate() - 1);
+            }
+
+            for (let i = 20; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                daysToShow.push(`${y}-${m}-${day}`);
+            }
+
+            daysToShow.forEach(dayKey => {
+                const hist = state.history[dayKey] || { totalMl: 0, goalMl: state.dailyGoal, glassesDrankCount: 0 };
+                const goal = hist.goalMl || state.dailyGoal;
+                const total = hist.totalMl || 0;
+                const pct = goal > 0 ? (total / goal) * 100 : 0;
+                const formatted = getFormattedDayTitle(dayKey);
+                const isToday = (dayKey === todayKey);
+
+                const card = document.createElement('div');
+                card.className = `cal-day-card ${isToday ? 'active-day' : ''} ${pct < 100 ? 'missed' : ''}`;
+
+                card.innerHTML = `
+          <div class="cal-day-label">${isToday ? 'Today' : formatted.weekday}</div>
+          <div class="cal-day-date">${formatted.month} ${formatted.dateNum}</div>
+          <div class="cal-day-intake">${total.toLocaleString()} mL</div>
+          <div class="cal-day-pct">${pct.toFixed(0)}%</div>
+          <div class="cal-day-goal">Goal: ${goal}</div>
+        `;
+
+                card.addEventListener('click', () => {
+                    showFullCalendarForDate(dayKey);
+                });
+
+                calendarScroll.appendChild(card);
+            });
+
+            if (!calendarScroll.dataset.scrolled) {
+                calendarScroll.scrollLeft = calendarScroll.scrollWidth;
+                calendarScroll.dataset.scrolled = "true";
+            }
+        }
+
+        /* =========================================================
+           FULL MONTH CALENDAR MODAL
+           ========================================================= */
+        function showFullCalendarForDate(dayKey) {
+            if (dayKey) {
+                const parts = dayKey.split('-');
+                calViewDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+            }
+            renderFullMonthCalendar();
+            if (dayKey) {
+                selectCalDay(dayKey);
+            }
+            fullCalModal.classList.add('open');
+        }
+
+        function renderFullMonthCalendar() {
+            const year = calViewDate.getFullYear();
+            const month = calViewDate.getMonth();
+            const monthName = calViewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+            calMonthTitle.textContent = monthName;
+
+            calMonthGrid.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const todayKey = getHydrationDayKey();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'cal-cell empty';
+                calMonthGrid.appendChild(empty);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayStr = String(day).padStart(2, '0');
+                const monthStr = String(month + 1).padStart(2, '0');
+                const cellDayKey = `${year}-${monthStr}-${dayStr}`;
+
+                const hist = state.history[cellDayKey] || { totalMl: 0, goalMl: state.dailyGoal, glassesDrankCount: 0 };
+                const goal = hist.goalMl || state.dailyGoal;
+                const total = hist.totalMl || 0;
+                const pct = goal > 0 ? (total / goal) * 100 : 0;
+
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell';
+                if (cellDayKey === todayKey) cell.classList.add('today-cell');
+                if (pct >= 100) cell.classList.add('achieved');
+
+                cell.innerHTML = `
+          <div class="cal-cell-day">${day}</div>
+          <div class="cal-cell-pct ${total === 0 ? 'zero' : ''}">${pct > 0 ? pct.toFixed(0) + '%' : '·'}</div>
+        `;
+
+                cell.addEventListener('click', () => {
+                    selectCalDay(cellDayKey);
+                });
+
+                calMonthGrid.appendChild(cell);
+            }
+
+            const todayParts = todayKey.split('-');
+            if (parseInt(todayParts[0], 10) === year && parseInt(todayParts[1], 10) === month + 1) {
+                selectCalDay(todayKey);
+            }
+        }
+
+        function selectCalDay(dayKey) {
+            const hist = state.history[dayKey] || { totalMl: 0, goalMl: state.dailyGoal, glassesDrankCount: 0 };
+            const goal = hist.goalMl || state.dailyGoal;
+            const total = hist.totalMl || 0;
+            const pct = goal > 0 ? (total / goal) * 100 : 0;
+            const formatted = getFormattedDayTitle(dayKey);
+            const isToday = (dayKey === getHydrationDayKey());
+
+            detailDateTitle.textContent = isToday ? `Today (${formatted.weekday}, ${formatted.month} ${formatted.dateNum})` : `${formatted.weekday}, ${formatted.month} ${formatted.dateNum}, ${dayKey.split('-')[0]}`;
+            detailBadgePct.textContent = `${pct.toFixed(1)}%`;
+            detailBadgePct.style.color = pct >= 100 ? 'var(--accent-green)' : (total > 0 ? 'var(--water-primary)' : 'var(--text-dim)');
+            detailBadgePct.style.background = pct >= 100 ? 'var(--accent-green-bg)' : '#f1f5f9';
+
+            detailIntake.textContent = `${total.toLocaleString()} mL`;
+            detailGoal.textContent = `${goal.toLocaleString()} mL`;
+            detailGlassesCount.textContent = hist.glassesDrankCount || 0;
+        }
+
+        btnOpenFullCal.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showFullCalendarForDate(getHydrationDayKey());
+        });
+
+        btnHeaderCalendarTitle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showFullCalendarForDate(getHydrationDayKey());
+        });
+
+        btnCloseFullCal.addEventListener('click', () => fullCalModal.classList.remove('open'));
+        fullCalModal.addEventListener('click', (e) => {
+            if (e.target === fullCalModal) fullCalModal.classList.remove('open');
+        });
+
+        btnPrevMonth.addEventListener('click', () => {
+            calViewDate.setMonth(calViewDate.getMonth() - 1);
+            renderFullMonthCalendar();
+        });
+
+        btnNextMonth.addEventListener('click', () => {
+            calViewDate.setMonth(calViewDate.getMonth() + 1);
+            renderFullMonthCalendar();
+        });
+
+        /* =========================================================
+           TIMERS: RUNNING CLOCK & TIME SINCE LAST GLASS
+           ========================================================= */
+        function updateLiveClock() {
+            const now = new Date();
+            const dateOpts = { weekday: 'short', month: 'short', day: 'numeric' };
+            liveDateText.textContent = now.toLocaleDateString(undefined, dateOpts);
+
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+
+            liveTimeText.textContent = `${strHours}:${minutes}:${seconds} ${ampm}`;
+            checkDayBoundary();
+        }
+
+        let lastCheckedDay = getHydrationDayKey();
+        function checkDayBoundary() {
+            const currentDay = getHydrationDayKey();
+            if (currentDay !== lastCheckedDay) {
+                lastCheckedDay = currentDay;
+                // Start the new day with glass empty so user can choose from cabinet
+                state.isFilled = false;
+                state.lastFinishedTimestamp = null;
+                saveState();
+                updateUI();
+                showToast("🌅 4:00 AM reached! New hydration day started.");
+            }
+        }
+
+        function updateSinceLastGlassTimer() {
+            if (!state.lastFinishedTimestamp) {
+                timerDisplay.textContent = "--:--";
+                timerCard.classList.remove('alarm-active');
+                alarmBanner.classList.remove('active');
+                stopAlarmLoop();
+                return;
+            }
+
+            const now = Date.now();
+            const elapsedMs = Math.max(0, now - state.lastFinishedTimestamp);
+            const totalSeconds = Math.floor(elapsedMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+            const strH = String(hours).padStart(2, '0');
+            const strM = String(minutes).padStart(2, '0');
+            timerDisplay.textContent = `${strH}:${strM}`;
+
+            const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+            const isOverTwoHours = elapsedMs >= TWO_HOURS_MS;
+
+            if (isOverTwoHours) {
+                timerCard.classList.add('alarm-active');
+                if (!state.alarmDismissedForCurrentCycle) {
+                    alarmBanner.classList.add('active');
+                    startAlarmLoop();
+                }
+            } else {
+                timerCard.classList.remove('alarm-active');
+                alarmBanner.classList.remove('active');
+                stopAlarmLoop();
+            }
+        }
+
+        setInterval(updateLiveClock, 1000);
+        setInterval(updateSinceLastGlassTimer, 1000);
+        updateLiveClock();
+
+        /* =========================================================
+           USER ACTIONS: FINISH GLASS, REFILL & UNDO
+           ========================================================= */
+        btnFinishGlass.addEventListener('click', () => {
+            if (!state.isFilled) return;
+
+            initAudio();
+            const today = getTodayEntry();
+            const currentGlass = getCurrentGlass();
+
+            const previousTotal = today.totalMl;
+            today.totalMl += currentGlass.capacity;
+            today.glassesDrankCount += 1;
+
+            const previousTimestamp = state.lastFinishedTimestamp;
+            today.logs.push({
+                time: Date.now(),
+                glassName: currentGlass.name,
+                capacity: currentGlass.capacity,
+                prevLastFinishedTimestamp: previousTimestamp
+            });
+
+            state.isFilled = false;
+            state.lastFinishedTimestamp = Date.now();
+            state.alarmDismissedForCurrentCycle = false;
+
+            saveState();
+            playWaterSound();
+            updateUI();
+            updateSinceLastGlassTimer();
+
+            showToast(`✨ Drank ${currentGlass.capacity} mL! Glass finished.`);
+
+            const goal = today.goalMl || state.dailyGoal;
+            if (previousTotal < goal && today.totalMl >= goal) {
+                triggerGoalCelebration();
+            }
+        });
+
+        btnRefillGlass.addEventListener('click', () => {
+            if (state.isFilled) return;
+
+            initAudio();
+            state.isFilled = true;
+            saveState();
+            playWaterSound();
+            updateUI();
+
+            showToast(`Refilled ${getCurrentGlass().name}! Ready to drink.`);
+        });
+
+        btnUndoGlass.addEventListener('click', () => {
+            const today = getTodayEntry();
+            if (!today.logs || today.logs.length === 0) {
+                showToast("No drinks to undo today.");
+                return;
+            }
+
+            initAudio();
+            const lastLog = today.logs.pop();
+            today.totalMl = Math.max(0, today.totalMl - lastLog.capacity);
+            today.glassesDrankCount = Math.max(0, today.glassesDrankCount - 1);
+
+            if (today.logs.length > 0) {
+                state.lastFinishedTimestamp = today.logs[today.logs.length - 1].time;
+            } else {
+                state.lastFinishedTimestamp = lastLog.prevLastFinishedTimestamp || null;
+            }
+
+            // Re-fill the glass
+            state.isFilled = true;
+            state.alarmDismissedForCurrentCycle = false;
+
+            saveState();
+            updateUI();
+            updateSinceLastGlassTimer();
+
+            showToast(`↩️ Undid ${lastLog.capacity} mL (${lastLog.glassName})`);
+        });
+
+        btnDismissAlarm.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.alarmDismissedForCurrentCycle = true;
+            saveState();
+            alarmBanner.classList.remove('active');
+            stopAlarmLoop();
+            showToast("👍 Reminder dismissed. Stay hydrated!");
+        });
+
+        /* =========================================================
+           GLASS CABINET LOGIC (WITH WORKING DELETE '✕')
+           ========================================================= */
+        function renderCabinetList() {
+            cabinetGlassesList.innerHTML = '';
+
+            state.glasses.forEach(glass => {
+                const isCurrent = (glass.id === state.currentGlassId);
+                const item = document.createElement('div');
+                item.className = `glass-card-item ${isCurrent ? 'selected' : ''}`;
+
+                item.innerHTML = `
+          <div class="glass-card-info">
+            <div class="glass-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2H7l2 16a4 4 0 0 0 8 0l2-16z"></path></svg>
+            </div>
+            <div>
+              <div class="glass-name-title">${escapeHtml(glass.name)}</div>
+              <div class="glass-cap-sub">${glass.capacity} mL</div>
+            </div>
+          </div>
+          <div class="glass-card-actions">
+            ${isCurrent ? '<span class="btn-pill-small active">Equipped</span>' : `<button class="btn-pill-small btn-select-glass" data-id="${glass.id}">Equip</button>`}
+            <button class="btn-pill-small btn-edit-glass" data-id="${glass.id}">Edit</button>
+            ${state.glasses.length > 1 ? `<button class="btn-del-glass-btn" data-id="${glass.id}" title="Remove glass">✕</button>` : ''}
+          </div>
+        `;
+
+                cabinetGlassesList.appendChild(item);
+            });
+
+            // Equip button listener
+            cabinetGlassesList.querySelectorAll('.btn-select-glass').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    state.currentGlassId = id;
+                    saveState();
+                    renderCabinetList();
+                    updateUI();
+                    showToast(`Equipped ${getCurrentGlass().name}`);
+                });
+            });
+
+            // Edit button listener
+            cabinetGlassesList.querySelectorAll('.btn-edit-glass').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const target = state.glasses.find(g => g.id === id);
+                    if (target) {
+                        editGlassId.value = target.id;
+                        inputGlassName.value = target.name;
+                        inputGlassCap.value = target.capacity;
+                        cabinetFormTitle.textContent = `Edit "${target.name}"`;
+                        btnSaveGlass.textContent = "Update Glass";
+                        inputGlassName.focus();
+                    }
+                });
+            });
+
+            // Delete '✕' button listener - directly reliable
+            cabinetGlassesList.querySelectorAll('.btn-del-glass-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const target = state.glasses.find(g => g.id === id);
+                    if (!target) return;
+
+                    if (state.glasses.length <= 1) {
+                        showToast("Cannot remove your only glass!");
+                        return;
+                    }
+
+                    // Remove glass
+                    state.glasses = state.glasses.filter(g => g.id !== id);
+                    if (state.currentGlassId === id) {
+                        state.currentGlassId = state.glasses[0].id;
+                    }
+
+                    saveState();
+                    renderCabinetList();
+                    updateUI();
+                    showToast(`Removed "${target.name}" from cabinet`);
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        btnSaveGlass.addEventListener('click', () => {
+            const name = inputGlassName.value.trim();
+            const cap = parseInt(inputGlassCap.value, 10);
+
+            if (!name) {
+                showToast("Please enter a name for the glass.");
+                inputGlassName.focus();
+                return;
+            }
+            if (!cap || cap <= 0) {
+                showToast("Please enter a valid capacity in mL.");
+                inputGlassCap.focus();
+                return;
+            }
+
+            if (editGlassId.value) {
+                const target = state.glasses.find(g => g.id === editGlassId.value);
+                if (target) {
+                    target.name = name;
+                    target.capacity = cap;
+                    showToast(`Updated "${target.name}"`);
+                }
+            } else {
+                const newGlass = {
+                    id: 'g_' + Date.now(),
+                    name: name,
+                    capacity: cap
+                };
+                state.glasses.push(newGlass);
+                state.currentGlassId = newGlass.id;
+                showToast(`Added and equipped "${name}"`);
+            }
+
+            editGlassId.value = '';
+            inputGlassName.value = '';
+            inputGlassCap.value = '';
+            cabinetFormTitle.textContent = "Add New Glass";
+            btnSaveGlass.textContent = "Save to Cabinet";
+
+            saveState();
+            renderCabinetList();
+            updateUI();
+        });
+
+        btnOpenCabinet.addEventListener('click', () => {
+            if (state.isFilled) {
+                showToast("⚠️ Finish your current glass first before changing vessels!");
+                return;
+            }
+            renderCabinetList();
+            cabinetModal.classList.add('open');
+        });
+
+        btnCloseCabinet.addEventListener('click', () => cabinetModal.classList.remove('open'));
+        cabinetModal.addEventListener('click', (e) => {
+            if (e.target === cabinetModal) cabinetModal.classList.remove('open');
+        });
+
+        /* =========================================================
+           SETTINGS & RESET TODAY
+           ========================================================= */
+        btnOpenSettings.addEventListener('click', () => {
+            const today = getTodayEntry();
+            inputDailyGoal.value = today.goalMl || state.dailyGoal;
+            chkAudioAlarm.checked = state.soundEnabled;
+            // Reset confirmation button state
+            btnResetToday.textContent = "Reset Today";
+            btnResetToday.dataset.confirming = "false";
+            resetSubtext.textContent = "Clears today's intake back to 0 mL";
+            settingsModal.classList.add('open');
+        });
+
+        btnCloseSettings.addEventListener('click', () => settingsModal.classList.remove('open'));
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.remove('open');
+        });
+
+        btnSaveSettings.addEventListener('click', () => {
+            const newGoal = parseInt(inputDailyGoal.value, 10);
+            if (!newGoal || newGoal < 100) {
+                showToast("Please enter a valid goal (at least 100 mL).");
+                return;
+            }
+
+            state.dailyGoal = newGoal;
+            const today = getTodayEntry();
+            today.goalMl = newGoal;
+            state.soundEnabled = chkAudioAlarm.checked;
+
+            saveState();
+            updateUI();
+            settingsModal.classList.remove('open');
+            showToast("⚙️ Settings updated successfully!");
+        });
+
+        // 2-tap reliable Reset Today without browser alert blocking
+        btnResetToday.addEventListener('click', () => {
+            if (btnResetToday.dataset.confirming !== "true") {
+                btnResetToday.dataset.confirming = "true";
+                btnResetToday.textContent = "Tap again to confirm";
+                resetSubtext.textContent = "⚠️ Warning: This will erase today's drinks!";
+                return;
+            }
+
+            // Execute Reset
+            const today = getTodayEntry();
+            today.totalMl = 0;
+            today.glassesDrankCount = 0;
+            today.logs = [];
+
+            // Requirement: Start empty so user can choose glass & refill
+            state.isFilled = false;
+            state.lastFinishedTimestamp = null;
+            state.alarmDismissedForCurrentCycle = false;
+
+            saveState();
+            updateUI();
+            updateSinceLastGlassTimer();
+
+            settingsModal.classList.remove('open');
+            showToast("🔄 Today's progress reset to 0 mL. Glass empty.");
+        });
+
+        /* =========================================================
+           TOAST HELPER
+           ========================================================= */
+        let toastTimeout = null;
+        function showToast(message) {
+            toastMsg.textContent = message;
+            toastPill.classList.add('show');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastPill.classList.remove('show');
+            }, 2600);
+        }
+
+        /* =========================================================
+           CONFETTI ENGINE
+           ========================================================= */
+        const canvas = document.getElementById('confettiCanvas');
+        const ctx = canvas.getContext('2d');
+        let confettiParticles = [];
+        let confettiAnimId = null;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function triggerGoalCelebration() {
+            playCelebrationSound();
+            showToast("🎉 CONGRATULATIONS! Daily goal achieved!");
+
+            confettiParticles = [];
+            const colors = ['#0284c7', '#0ea5e9', '#38bdf8', '#059669', '#d97706', '#e11d48'];
+
+            for (let i = 0; i < 90; i++) {
+                confettiParticles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height * 0.45,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.9) * 14,
+                    size: Math.random() * 7 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+
+            if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let aliveCount = 0;
+
+            confettiParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.35;
+                p.vx *= 0.98;
+                p.rotation += p.rotSpeed;
+                p.opacity -= 0.009;
+
+                if (p.opacity > 0) {
+                    aliveCount++;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.globalAlpha = Math.max(0, p.opacity);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                    ctx.restore();
+                }
+            });
+
+            if (aliveCount > 0) {
+                confettiAnimId = requestAnimationFrame(animateConfetti);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        /* =========================================================
+           INITIAL LAUNCH
+           ========================================================= */
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            updateUI();
+            updateSinceLastGlassTimer();
+        });
+        resizeCanvas();
+        updateUI();
+        updateSinceLastGlassTimer();
+    </script>
+</body>
+
+</html>
