@@ -1,4 +1,4 @@
-# 💧 HydroPulse — Personal Water Tracker
+# Personal Water Tracker
 
 A modern, mobile-first progressive web app designed to track your daily hydration directly from your phone.
 
@@ -6,7 +6,7 @@ A modern, mobile-first progressive web app designed to track your daily hydratio
 
 ---
 
-## ✨ Features
+## Features
 
 - **Daily Intake Tracking**: Track in mL and percentage towards your customizable daily goal (e.g., 2,000 mL).
 - **Realistic Glass Graphic**: Crystal-clear cup with animated water levels, sloshing waves, and reflections.
