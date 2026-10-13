@@ -7,9 +7,16 @@
   
   <!-- Mobile & PWA meta tags -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Water Tracker">
-  <meta name="theme-color" content="#f0f7ff">
+  <meta name="apple-mobile-web-app-title" content="HydroPulse">
+  <meta name="theme-color" content="#0284c7">
+
+  <!-- Favicon & Touch Icons -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1716,7 +1723,7 @@
        ========================================================= */
     function loadState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('hydropulse_tracker_v1');
         if (raw) {
           const parsed = JSON.parse(raw);
           return { ...DEFAULT_DATA, ...parsed };

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background rounded squircle gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="45%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <!-- Droplet main gradient -->
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="28%" stop-color="#e0f2fe" />
+      <stop offset="70%" stop-color="#bae6fd" />
+      <stop offset="100%" stop-color="#7dd3fc" />
+    </linearGradient>
+
+    <!-- Soft water inner shadow -->
+    <linearGradient id="innerShade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.8)" />
+      <stop offset="100%" stop-color="rgba(2,132,199,0.3)" />
+    </linearGradient>
+
+    <!-- Filter for subtle 3D drop shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#034e7b" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- App Icon Base Squircle -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+
+  <!-- Outer ambient ring glow -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4" />
+  <circle cx="256" cy="256" r="200" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+
+  <!-- The Hydro Droplet -->
+  <path d="M 256 95
+           C 256 95 365 245 365 325
+           C 365 385 316 430 256 430
+           C 196 430 147 385 147 325
+           C 147 245 256 95 256 95 Z"
+        fill="url(#dropGrad)"
+        filter="url(#shadow)" />
+
+  <!-- Inner Liquid Highlight Accent -->
+  <path d="M 256 128
+           C 256 128 345 252 345 322
+           C 345 372 305 408 256 408
+           C 246 408 238 406 230 403
+           C 275 390 310 355 310 315
+           C 310 255 240 165 240 165 Z"
+        fill="url(#innerShade)" opacity="0.6" />
+
+  <!-- Top-left curved gloss reflection sheen -->
+  <path d="M 230 170
+           C 205 220 180 270 180 320
+           C 180 348 190 372 205 388
+           C 185 370 172 345 172 320
+           C 172 270 198 220 220 178 Z"
+        fill="#ffffff" opacity="0.85" />
+
+  <!-- Small circular sparkle highlight -->
+  <ellipse cx="228" cy="235" rx="14" ry="24" transform="rotate(-28 228 235)" fill="#ffffff" opacity="0.9" />
+</svg>

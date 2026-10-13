@@ -1,9 +1,13 @@
 // HydroPulse Service Worker (Offline PWA Support)
-const CACHE_NAME = 'hydropulse-cache-v1';
+const CACHE_NAME = 'hydropulse-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './water_tracker.html',
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap'
 ];
 
